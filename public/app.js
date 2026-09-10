@@ -300,14 +300,13 @@ async function init(){
   document.getElementById('tutorNameLower').textContent = cfg.tutorName.toLowerCase();
 
   document.getElementById('scopeNotePitaj').innerHTML =
-    `<b>Prototip.</b> Materijal ispod dolazi iz baze znanja profesora/profesorke ${cfg.tutorName}
-     (predmet: ${cfg.subjectNameCap}). Pitanja iz ovog gradiva dobijaju odgovor sa <b>✓ IZVOR</b>.
+    `<b>Prototip.</b> Odgovori na pitanja dolaze iz baze znanja koju je obezbedila profesorka/profesor ${cfg.tutorName}
+     (predmet: ${cfg.subjectNameCap}). Pitanja iz gradiva dobijaju odgovor sa <b>✓ IZVOR</b>.
      Pitanja van gradiva i dalje dobijaju odgovor (iz opšteg znanja modela), ali sa napomenom
-     <b>◐ proveriti sa ${cfg.tutorName}</b>.`;
+     <b>◐ proveriti sa profesorkom</b>.`;
 
   document.getElementById('footerLine').innerHTML =
-    `Poziva model preko sopstvenog servera (API ključ se čuva server-side, ne u browseru).
-     Model: <b>${cfg.model}</b> · Reasoning: <b>${cfg.reasoningLevel}</b>`;
+    `Model: <b>${cfg.model}</b> · Reasoning: <b>${cfg.reasoningLevel}</b>`;
 
   const chipsPitaj = document.getElementById('chipsPitaj');
   cfg.sampleQuestions.forEach(sq => {

@@ -74,6 +74,18 @@ let knowledge = loadKnowledge();
 let sampleQuestions = loadSampleQuestions();
 
 // -----------------------------------------------------------------------------
+// Logging — jednostavan strukturiran logger (timestamp + nivo + poruka + meta),
+// bez eksternih zavisnosti. Koristi se za HTTP pristup, chat aktivnost i greške.
+// -----------------------------------------------------------------------------
+
+function log(level, message, meta) {
+  const line = `[${new Date().toISOString()}] [${level.toUpperCase()}] ${message}`;
+  const out = level === 'error' || level === 'warn' ? console.error : console.log;
+  if (meta !== undefined) out(line, meta);
+  else out(line);
+}
+
+// -----------------------------------------------------------------------------
 // Građenje sistemskih promptova (isti principi kao u prototipu: uzemljeno u
 // materijal, tri nivoa pouzdanosti za Q&A mod, Sokratski dijalog za quiz mod)
 // -----------------------------------------------------------------------------
@@ -89,7 +101,7 @@ Pravila:
 - Ako pitanje NIJE pokriveno materijalom ispod, ali je iz oblasti ${config.subjectName} (ili srodnih
   oblasti koje se sa njom prepliću) i ti sa sigurnošću znaš tačan odgovor iz opšteg naučnog znanja —
   SLOBODNO odgovori, jasno i tačno, korak po korak. Ali na kraju OBAVEZNO dodaj liniju u formatu:
-  [PROVERITI SA ${config.tutorName.toUpperCase()}] jer odgovor nije proveren protiv materijala i
+  [PROVERITI SA PROFESOROM] jer odgovor nije proveren protiv materijala i
   metodologije profesora, iako je naučno tačan.
 - Ako pitanje uopšte nije iz oblasti ${config.subjectName}, ili ako nisi siguran u tačnost odgovora,
   jasno reci da ne možeš pouzdano da odgovoriš i predloži da se pita profesor direktno.
@@ -168,6 +180,16 @@ function buildRequestBody(systemPrompt, messages) {
 
 const app = express();
 app.use(express.json());
+
+// Loguje svaki HTTP zahtev: metod, putanju, status kod i trajanje.
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    log('info', `${req.method} ${req.originalUrl} ${res.statusCode} ${Date.now() - start}ms`);
+  });
+  next();
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Frontend čita brending, teme za quiz i demo pitanja odavde — ništa nije
@@ -193,7 +215,9 @@ app.post('/api/reload', (req, res) => {
     knowledge = loadKnowledge();
     sampleQuestions = loadSampleQuestions();
     res.json({ ok: true, topics: knowledge.topics.length });
+    log('info', `reload ok topics=${knowledge.topics.length}`);
   } catch (err) {
+    log('error', 'Greška pri reload-u', { error: err.message });
     res.status(500).json({ error: 'Greška pri učitavanju: ' + err.message });
   }
 });
@@ -220,6 +244,13 @@ app.post('/api/chat', async (req, res) => {
     return res.status(400).json({ error: 'Nedostaje messages niz.' });
   }
 
+  const chatStart = Date.now();
+  const lastMessage = messages[messages.length - 1];
+  const preview = typeof lastMessage?.content === 'string'
+    ? lastMessage.content.slice(0, 120).replace(/\s+/g, ' ')
+    : '';
+  log('info', `chat start mode=${mode || 'pitaj'} messages=${messages.length} preview="${preview}"`);
+
   const systemPrompt = mode === 'provera' ? buildQuizSystemPrompt() : buildQaSystemPrompt();
   const requestBody = buildRequestBody(systemPrompt, messages);
 
@@ -235,6 +266,7 @@ app.post('/api/chat', async (req, res) => {
       body: JSON.stringify(requestBody)
     });
   } catch (err) {
+    log('error', 'Greška u komunikaciji sa modelom', { mode, error: err.message });
     return res.status(500).json({ error: 'Greška u komunikaciji sa modelom: ' + err.message });
   }
 
@@ -242,7 +274,7 @@ app.post('/api/chat', async (req, res) => {
   // običan (ne-streamovan) JSON — prosledi ga kao normalnu grešku, ne SSE.
   if (!upstream.ok) {
     const errData = await upstream.json().catch(() => ({}));
-    console.error('Anthropic API greška:', errData);
+    log('error', 'Anthropic API greška', { mode, status: upstream.status, error: errData });
     return res.status(upstream.status).json({ error: errData.error?.message || 'Anthropic API greška' });
   }
 
@@ -286,8 +318,9 @@ app.post('/api/chat', async (req, res) => {
       }
     }
     sendEvent('done', {});
+    log('info', `chat done mode=${mode || 'pitaj'} ${Date.now() - chatStart}ms`);
   } catch (err) {
-    console.error(err);
+    log('error', 'Greška u streamu', { mode, error: err.message });
     sendEvent('error', { message: 'Greška u streamu: ' + err.message });
   } finally {
     res.end();
@@ -295,10 +328,10 @@ app.post('/api/chat', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`${config.appTitle} radi na http://localhost:${PORT}`);
-  console.log(`Učitano tema iz baze znanja: ${knowledge.topics.length}`);
-  console.log(`Model: ${config.model} · Reasoning level: ${config.reasoningLevel || 'none'}`);
+  log('info', `${config.appTitle} radi na http://localhost:${PORT}`);
+  log('info', `Učitano tema iz baze znanja: ${knowledge.topics.length}`);
+  log('info', `Model: ${config.model} · Reasoning level: ${config.reasoningLevel || 'none'}`);
   if (!API_KEY) {
-    console.warn('UPOZORENJE: ANTHROPIC_API_KEY nije podešen (vidi .env.example) — /api/chat neće raditi.');
+    log('warn', 'ANTHROPIC_API_KEY nije podešen (vidi .env.example) — /api/chat neće raditi.');
   }
 });
