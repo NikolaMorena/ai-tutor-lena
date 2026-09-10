@@ -1,0 +1,10 @@
+{
+  "tutorName": "Nevenka",
+  "subjectName": "biologija",
+  "subjectNameCap": "Biologija",
+  "appTitle": "Biologija na ti",
+  "tagline": "AI asistent za pripremu prijemnog ispita",
+  "model": "claude-sonnet-5",
+  "maxTokens": 1000,
+  "reasoningLevel": "low"
+}

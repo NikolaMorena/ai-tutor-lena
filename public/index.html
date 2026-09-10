@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Tutor</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="element-mark">
+        <span class="num" id="tutorInitial">–</span>
+        <span class="sym" id="tutorNameLower">–</span>
+        <span class="name">TUTOR</span>
+      </div>
+      <div>
+        <h1 id="appTitle">–</h1>
+        <p id="tagline">–</p>
+      </div>
+    </div>
+    <div class="status"><span class="dot"></span>uzemljeno u materijal</div>
+  </header>
+
+  <div class="toolbar">
+    <button id="clearBtn" type="button" class="chip chip-clear">✕ Nova konverzacija</button>
+  </div>
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tabPitaj" type="button">🗨 Pitaj</button>
+    <button class="mode-tab" id="tabProvera" type="button">🎓 Provera znanja</button>
+  </div>
+
+  <div class="scope-note" id="scopeNotePitaj"></div>
+  <div class="scope-note" id="scopeNoteProvera" style="display:none;">
+    <b>Provera znanja.</b> Izaberi temu — AI postavlja pitanje, ti odgovaraš svojim rečima. Ako je odgovor
+    nepotpun, AI ne daje odmah tačan odgovor — postavlja podpitanje koje te vodi ka njemu, kao na usmenom.
+    Kad je odgovor kompletan, potvrđuje i nastavlja dalje.
+  </div>
+
+  <div class="chips" id="chipsPitaj"></div>
+  <div class="chips" id="chipsProvera" style="display:none;"></div>
+
+  <div id="chat"></div>
+
+  <div class="composer">
+    <textarea id="input" placeholder="Postavi pitanje iz gradiva…"></textarea>
+    <button type="button" id="send">Pošalji</button>
+  </div>
+
+  <footer>
+    <span id="footerLine">–</span>
+  </footer>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
