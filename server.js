@@ -41,7 +41,8 @@ function loadSampleQuestions() {
 // Parses knowledge.md: each "## Title" section becomes one topic.
 // Returns { topics: [{title, content}], materialText: "[MATERIAL 1 — ...]\n...\n\n[MATERIAL 2 — ...]..." }
 function loadKnowledge() {
-  const raw = fs.readFileSync(KNOWLEDGE_PATH, 'utf8');
+  // normalize Windows (CRLF) line endings, otherwise no "## " heading matches and no topics are found
+  const raw = fs.readFileSync(KNOWLEDGE_PATH, 'utf8').replace(/\r\n?/g, '\n');
   // strip the HTML comment at the top of the file (editing instructions), it is not sent to the model
   const withoutComment = raw.replace(/<!--[\s\S]*?-->/, '').trim();
 
@@ -332,6 +333,9 @@ app.post('/api/chat', async (req, res) => {
 app.listen(PORT, () => {
   log('info', `${config.appTitle} running at http://localhost:${PORT}`);
   log('info', `Topics loaded from knowledge base: ${knowledge.topics.length}`);
+  if (knowledge.topics.length === 0) {
+    log('warn', 'No topics found in data/knowledge.md — each topic must start with "## Topic name".');
+  }
   log('info', `Model: ${config.model} · Reasoning level: ${config.reasoningLevel || 'none'}`);
   if (!API_KEY) {
     log('warn', 'ANTHROPIC_API_KEY is not set (see .env.example) — /api/chat will not work.');
