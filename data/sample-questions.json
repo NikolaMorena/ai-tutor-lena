@@ -1,7 +1,7 @@
 [
-  { "label": "prokariota vs eukariota", "question": "Koja je razlika između prokariotske i eukariotske ćelije?" },
-  { "label": "primarni vs sekundarni lizozom", "question": "Koja je razlika između primarnog i sekundarnog lizozoma?" },
-  { "label": "hromatin vs hromozom", "question": "Koja je razlika između hromatina i hromozoma?" },
-  { "label": "van gradiva → test", "question": "Objasni mi detaljno proces fotosinteze, sa svim fazama." },
-  { "label": "potpuno van teme → test", "question": "Koja je glavna izvozna kultura Brazila?" }
+  { "label": "homogeneous coordinates", "question": "Why do we use homogeneous coordinates for transformations?" },
+  { "label": "Bresenham algorithm", "question": "How does the Bresenham line algorithm work, and why is it better than DDA?" },
+  { "label": "Gouraud vs Phong shading", "question": "What is the difference between Gouraud shading and Phong shading?" },
+  { "label": "outside curriculum → test", "question": "How does hardware-accelerated ray tracing work on modern GPUs with RT cores?" },
+  { "label": "completely off-topic → test", "question": "What is Brazil's main export crop?" }
 ]

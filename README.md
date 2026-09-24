@@ -1,32 +1,34 @@
 # AI Tutor
 
-Mala web aplikacija: AI tutor uzemljen u sopstvenu bazu znanja, sa Q&A i "Provera znanja"
-(usmeni-ispit) režimom. API ključ se čuva na serveru, nikad u browseru.
+A small web application: an AI tutor grounded in its own knowledge base, with a Q&A mode and a
+"Knowledge check" (oral exam) mode. The current knowledge base is the Computer Graphics part of the
+TU Wien lecture notes for *Introduction to Visual Computing* (VU 186.822, SS 2025). The API key is kept on the server, never in the browser.
 
-## Pokretanje (lokalno)
+## Running locally
 
 ```bash
 npm install
 cp .env.example .env
-# otvori .env i upiši svoj pravi ANTHROPIC_API_KEY (console.anthropic.com -> API Keys)
+# open .env and enter your real ANTHROPIC_API_KEY (console.anthropic.com -> API Keys)
 npm start
 ```
 
-Otvori http://localhost:3000
+Open http://localhost:3000
 
-## Struktura projekta
+## Project structure
 
 ```
-config/app.config.json    <- brendiranje + model + reasoning level
-data/knowledge.md         <- BAZA ZNANJA - sav materijal na kom je AI uzemljen
-data/sample-questions.json<- demo pitanja za dugmad u "Pitaj" režimu
-server.js                 <- backend (Express) - jedini fajl koji zna za API ključ
-public/                   <- frontend (HTML/CSS/JS), ne dira se za promenu predmeta
+config/app.config.json    <- branding + model + reasoning level
+data/knowledge.md         <- KNOWLEDGE BASE - all the material the AI is grounded in
+data/EVC_Skriptum_CG_EN_v3.pdf <- original source of the knowledge base (not read by the server)
+data/sample-questions.json<- demo questions for the buttons in "Ask" mode
+server.js                 <- backend (Express) - the only file that knows the API key
+public/                   <- frontend (HTML/CSS/JS), no need to touch it to change the subject
 ```
 
-## Konfigurabilan model i reasoning (extended thinking)
+## Configurable model and reasoning (extended thinking)
 
-U `config/app.config.json`:
+In `config/app.config.json`:
 
 ```json
 {
@@ -36,48 +38,50 @@ U `config/app.config.json`:
 }
 ```
 
-- `model` — bilo koji važeći Anthropic model string (npr. `claude-sonnet-5`, `claude-opus-5`,
-  `claude-haiku-4-5-20251001`). Jači model = bolji odgovori, sporije i skuplje.
-- `reasoningLevel` — `"none"` (podrazumevano, najbrže) ili `"low" | "medium" | "high" | "xhigh" | "max"`.
-  Kad nije `"none"`, server automatski šalje `thinking: {"type":"adaptive"}` i
-  `output_config: {"effort": <nivo>}` Anthropic API-ju, i uvećava `max_tokens` da ostavi prostora i
-  za razmišljanje i za odgovor. Model sam odlučuje *da li* će razmišljati na svako pitanje (adaptivno)
-  — `reasoningLevel` samo podešava koliko je sklon da to uradi i koliko duboko.
-  Napomena: koji nivoi su podržani zavisi od modela — proveri
-  [Anthropic dokumentaciju](https://platform.claude.com/docs/en/build-with-claude/effort) pre nego što
-  podigneš na `"high"` ili više ako primetiš da su odgovori spori ili skupi za jednostavna pitanja
-  (za ovaj tutor, `"none"` ili `"low"` je verovatno dovoljno — pitanja su uglavnom direktna pretraga
-  kroz materijal, ne kompleksno višekorako rezonovanje).
+- `model` — any valid Anthropic model string (e.g. `claude-sonnet-5`, `claude-opus-5`,
+  `claude-haiku-4-5-20251001`). A stronger model = better answers, slower and more expensive.
+- `reasoningLevel` — `"none"` (default, fastest) or `"low" | "medium" | "high" | "xhigh" | "max"`.
+  When it is not `"none"`, the server automatically sends `thinking: {"type":"adaptive"}` and
+  `output_config: {"effort": <level>}` to the Anthropic API, and increases `max_tokens` to leave room for
+  both thinking and the answer. The model itself decides *whether* to think on each question (adaptive)
+  — `reasoningLevel` only tunes how inclined it is to do so and how deeply.
+  Note: which levels are supported depends on the model — check the
+  [Anthropic documentation](https://platform.claude.com/docs/en/build-with-claude/effort) before
+  raising it to `"high"` or above if you notice answers are slow or expensive for simple questions
+  (for this tutor, `"none"` or `"low"` is probably enough — questions are mostly direct lookups
+  in the material, not complex multi-step reasoning).
 
-Odgovor se **streamuje** — učenik vidi tekst kako nastaje, red po red, umesto da čeka ceo odgovor
-odjednom. Kad je `reasoningLevel` uključen, dok model razmišlja prikazuje se "Razmišlja dublje…" pre
-nego što tekst počne da stiže (sirovo razmišljanje se nikad ne prikazuje učeniku, samo finalni odgovor).
+The answer is **streamed** — the student sees the text as it is produced, line by line, instead of waiting
+for the whole answer at once. When `reasoningLevel` is on, "Thinking deeper…" is shown while the model is
+thinking, before the text starts arriving (the raw thinking is never shown to the student, only the final answer).
 
-## Kako promeniti temu/tutora (bez pisanja koda)
+## How to change the subject/tutor (without writing code)
 
-1. Otvori `config/app.config.json` i promeni `tutorName`, `subjectName`, `subjectNameCap`,
-   `appTitle`, `tagline`.
-2. Zameni sadržaj `data/knowledge.md` novim materijalom. Format: svaka tema počinje sa
-   `## Naziv teme`, sadržaj ide ispod do sledećeg `##`. Broj tema nije ograničen - dugmad za
-   "Provera znanja" i lista tema u sistemskom promptu se grade automatski iz ovog fajla.
-3. (Opciono) Ažuriraj `data/sample-questions.json` za nova demo pitanja u "Pitaj" režimu.
-4. Restartuj server (`npm start`), ili pozovi `POST /api/reload` da se izmene učitaju bez restarta.
+1. Open `config/app.config.json` and change `tutorName`, `subjectName`, `subjectNameCap`,
+   `appTitle`, `tagline`, and `audience` (who the answers are written for, e.g. "a university student
+   preparing for the exam").
+2. Replace the contents of `data/knowledge.md` with the new material. Format: each topic starts with
+   `## Topic name`, and its content goes below it until the next `##`. The number of topics is unlimited -
+   the "Knowledge check" buttons and the topic list in the system prompt are built automatically from this file.
+3. (Optional) Update `data/sample-questions.json` with new demo questions for "Ask" mode.
+4. Restart the server (`npm start`), or call `POST /api/reload` to load the changes without a restart.
 
-Nijedan od ovih koraka ne zahteva izmenu `.js` fajlova.
+None of these steps require changing any `.js` files.
 
-## Deployment (kad se izađe iz "samo za mene" faze)
+## Deployment (once you move past the "just for me" phase)
 
-Ovo je obična Node/Express aplikacija - može na Render, Railway, Fly.io, ili sopstveni VPS.
-Bitno: `ANTHROPIC_API_KEY` se podešava kao environment varijabla na hosting servisu (isto kao
-u `.env` lokalno), nikad se ne stavlja u kod niti u frontend.
+This is a plain Node/Express application - it can run on Render, Railway, Fly.io, or your own VPS.
+Important: `ANTHROPIC_API_KEY` is set as an environment variable on the hosting service (the same as
+in `.env` locally), and is never put in the code or the frontend.
 
-## Ograničenja ovog MVP-a (realno, ne skriva se)
+## Limitations of this MVP (honestly stated)
 
-- Nema autentifikacije/naloga učenika - svako ko ima link može da koristi. Za pravu distribuciju
-  većem broju učenika, sledeći korak je dodavanje limita (npr. po IP adresi ili sa nalozima) da se
-  spreči da neko slučajno ili namerno potroši ceo budžet.
-- Provera znanja čuva istoriju razgovora samo u browseru učenika (u memoriji stranice, ne trajno) -
-  ako osveži stranicu, gubi napredak. Za pravu verziju, to bi trebalo čuvati po učeniku (baza
-  podataka), da profesor može i da vidi gde učenici najčešće greše (pomenuto ranije kao jedna od
-  prednosti AI pristupa).
-- Jedan model za sve (Claude Sonnet) - promenljivo u `config/app.config.json` -> `model`.
+- No authentication/student accounts - anyone with the link can use it. For real distribution to
+  a larger number of students, the next step is adding limits (e.g. per IP address or with accounts) to
+  prevent someone from accidentally or deliberately spending the whole budget.
+- The knowledge check keeps the conversation history only in the student's browser (in page memory, not
+  persistently) - if they refresh the page, they lose their progress. For a real version, this should be
+  stored per student (in a database), so the teacher can also see where students most often make mistakes.
+- One model for everything (Claude Sonnet) - changeable in `config/app.config.json` -> `model`.
+- The whole knowledge base (~40k tokens) is sent with every request. Prompt caching keeps repeat
+  requests cheap, but for a much larger body of material a retrieval step would be needed.
