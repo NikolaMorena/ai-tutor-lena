@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="sr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,33 +21,33 @@
         <p id="tagline">–</p>
       </div>
     </div>
-    <div class="status"><span class="dot"></span>uzemljeno u materijal</div>
+    <div class="status"><span class="dot"></span>grounded in the material</div>
   </header>
 
   <div class="toolbar">
-    <button id="clearBtn" type="button" class="chip chip-clear">✕ Nova konverzacija</button>
+    <button id="clearBtn" type="button" class="chip chip-clear">✕ New conversation</button>
   </div>
 
   <div class="mode-tabs">
-    <button class="mode-tab active" id="tabPitaj" type="button">🗨 Pitaj</button>
-    <button class="mode-tab" id="tabProvera" type="button">🎓 Provera znanja</button>
+    <button class="mode-tab active" id="tabAsk" type="button">🗨 Ask</button>
+    <button class="mode-tab" id="tabQuiz" type="button">🎓 Knowledge check</button>
   </div>
 
-  <div class="scope-note" id="scopeNotePitaj"></div>
-  <div class="scope-note" id="scopeNoteProvera" style="display:none;">
-    <b>Provera znanja.</b> Izaberi temu — AI postavlja pitanje, ti odgovaraš svojim rečima. Ako je odgovor
-    nepotpun, AI ne daje odmah tačan odgovor — postavlja podpitanje koje te vodi ka njemu, kao na usmenom.
-    Kad je odgovor kompletan, potvrđuje i nastavlja dalje.
+  <div class="scope-note" id="scopeNoteAsk"></div>
+  <div class="scope-note" id="scopeNoteQuiz" style="display:none;">
+    <b>Knowledge check.</b> Pick a topic — the AI asks a question, you answer in your own words. If your answer
+    is incomplete, the AI doesn't give the correct answer right away — it asks a follow-up question that leads you
+    toward it, like at an oral exam. When your answer is complete, it confirms and moves on.
   </div>
 
-  <div class="chips" id="chipsPitaj"></div>
-  <div class="chips" id="chipsProvera" style="display:none;"></div>
+  <div class="chips" id="chipsAsk"></div>
+  <div class="chips" id="chipsQuiz" style="display:none;"></div>
 
   <div id="chat"></div>
 
   <div class="composer">
-    <textarea id="input" placeholder="Postavi pitanje iz gradiva…"></textarea>
-    <button type="button" id="send">Pošalji</button>
+    <textarea id="input" placeholder="Ask a question about the material…"></textarea>
+    <button type="button" id="send">Send</button>
   </div>
 
   <footer>

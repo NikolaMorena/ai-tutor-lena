@@ -1,7 +1,7 @@
-// app.js — frontend logika. Ne sadrži API ključ niti bilo šta specifično za
-// predmet/tutora (to sve dolazi sa servera preko /api/config).
+// app.js — frontend logic. Contains no API key and nothing specific to the
+// subject/tutor (all of that comes from the server via /api/config).
 
-let mode = 'pitaj'; // 'pitaj' | 'provera'
+let mode = 'ask'; // 'ask' | 'quiz'
 let quizHistory = [];
 let quizStarted = false;
 let msgCount = 0;
@@ -11,7 +11,7 @@ const input = document.getElementById('input');
 const sendBtn = document.getElementById('send');
 
 // ---------------------------------------------------------------------------
-// Markdown -> HTML (isti mali parser kao u prototipu: ##, **, *, `, liste)
+// Markdown -> HTML (same small parser as in the prototype: ##, **, *, `, lists)
 // ---------------------------------------------------------------------------
 
 function escapeHtml(str){
@@ -82,7 +82,7 @@ function addMessage(role, text, pending=false){
 
 function renderAnswer(bubbleEl, rawText){
   bubbleEl.classList.remove('pending');
-  const srcMatch = rawText.match(/\[(IZVOR:[^\]]+|PROVERITI SA [^\]]+|NIJE U MATERIJALU)\]/);
+  const srcMatch = rawText.match(/\[(SOURCE:[^\]]+|VERIFY WITH [^\]]+|NOT IN MATERIAL)\]/);
   let body = rawText;
   let srcLine = null;
   if(srcMatch){ body = rawText.replace(srcMatch[0], '').trim(); srcLine = srcMatch[1]; }
@@ -92,14 +92,14 @@ function renderAnswer(bubbleEl, rawText){
   if(srcLine){
     const src = document.createElement('span');
     src.className = 'src';
-    if(srcLine.startsWith('IZVOR')){
+    if(srcLine.startsWith('SOURCE')){
       src.textContent = '✓ ' + srcLine;
       src.classList.add('src-ok');
-    } else if(srcLine.startsWith('PROVERITI SA')){
-      src.textContent = '◐ Van gradiva — ' + srcLine.toLowerCase().replace('proveriti sa', 'proveriti sa') + ' pre nego što se prosledi učeniku';
+    } else if(srcLine.startsWith('VERIFY WITH')){
+      src.textContent = '◐ Outside the curriculum — ' + srcLine.toLowerCase() + ' before relying on it';
       src.classList.add('src-check');
     } else {
-      src.textContent = '⚠ Nije u materijalu / nije pouzdano — pitati profesora direktno';
+      src.textContent = '⚠ Not in the material / not reliable — ask the teacher directly';
       src.classList.add('src-miss');
     }
     bubbleEl.appendChild(src);
@@ -108,10 +108,10 @@ function renderAnswer(bubbleEl, rawText){
 }
 
 // ---------------------------------------------------------------------------
-// Poziv ka backend-u preko streaminga (SSE). NE ka Anthropic API-ju direktno —
-// server drži ključ. Protokol (definisan u server.js):
+// Streaming (SSE) call to the backend. NOT to the Anthropic API directly —
+// the server holds the key. Protocol (defined in server.js):
 //   event: status  {"state":"thinking"|"answering"}
-//   event: delta   {"text":"..."}   (kumulativno se nadovezuje)
+//   event: delta   {"text":"..."}   (appended cumulatively)
 //   event: done    {}
 //   event: error   {"message":"..."}
 // ---------------------------------------------------------------------------
@@ -125,7 +125,7 @@ async function streamBackend(mode, messages, onDelta, onStatus){
 
   if(!response.ok){
     const data = await response.json().catch(() => ({}));
-    throw new Error(data.error || ('Server greška ' + response.status));
+    throw new Error(data.error || ('Server error ' + response.status));
   }
 
   const reader = response.body.getReader();
@@ -154,7 +154,7 @@ async function streamBackend(mode, messages, onDelta, onStatus){
       if(eventType === 'status'){ onStatus && onStatus(payload.state); }
       else if(eventType === 'delta'){ fullText += payload.text; onDelta && onDelta(fullText); }
       else if(eventType === 'error'){ throw new Error(payload.message); }
-      // 'done' ne treba posebnu obradu - petlja se prirodno završava
+      // 'done' needs no special handling - the loop ends naturally
     }
   }
   return fullText;
@@ -162,12 +162,12 @@ async function streamBackend(mode, messages, onDelta, onStatus){
 
 async function ask(question){
   addMessage('user', question);
-  const pendingBubble = addMessage('assistant', 'Proveravam gradivo…', true);
+  const pendingBubble = addMessage('assistant', 'Checking the material…', true);
   sendBtn.disabled = true;
   let started = false;
   try{
     const fullText = await streamBackend(
-      'pitaj',
+      'ask',
       [{ role: 'user', content: question }],
       (partial) => {
         if(!started){ pendingBubble.classList.remove('pending'); started = true; }
@@ -175,12 +175,12 @@ async function ask(question){
         scrollChatToBottom();
       },
       (state) => {
-        if(state === 'thinking' && !started){ pendingBubble.textContent = 'Razmišlja dublje…'; }
+        if(state === 'thinking' && !started){ pendingBubble.textContent = 'Thinking deeper…'; }
       }
     );
-    renderAnswer(pendingBubble, fullText); // finalni prolaz: skida [IZVOR]/[PROVERITI...] tag, dodaje bedž
+    renderAnswer(pendingBubble, fullText); // final pass: strips the [SOURCE]/[VERIFY...] tag, adds the badge
   } catch(err){
-    renderAnswer(pendingBubble, 'Greška: ' + err.message + ' [NIJE U MATERIJALU]');
+    renderAnswer(pendingBubble, 'Error: ' + err.message + ' [NOT IN MATERIAL]');
     console.error(err);
   } finally {
     sendBtn.disabled = false;
@@ -191,27 +191,27 @@ async function startQuiz(topic){
   quizHistory = [];
   quizStarted = true;
   input.disabled = false;
-  input.placeholder = 'Upiši svoj odgovor…';
-  addMessage('user', 'Provera znanja — tema: ' + topic);
-  const pendingBubble = addMessage('assistant', 'Smišljam pitanje…', true);
+  input.placeholder = 'Type your answer…';
+  addMessage('user', 'Knowledge check — topic: ' + topic);
+  const pendingBubble = addMessage('assistant', 'Coming up with a question…', true);
   sendBtn.disabled = true;
-  const starter = `Postavi mi prvo pitanje iz teme: ${topic}. Sačekaj moj odgovor pre nego što nastaviš.`;
+  const starter = `Ask me the first question on the topic: ${topic}. Wait for my answer before you continue.`;
   quizHistory.push({ role: 'user', content: starter });
   let started = false;
   try{
     const fullText = await streamBackend(
-      'provera', quizHistory,
+      'quiz', quizHistory,
       (partial) => {
         if(!started){ pendingBubble.classList.remove('pending'); started = true; }
         pendingBubble.innerHTML = mdToHtml(partial);
         scrollChatToBottom();
       },
-      (state) => { if(state === 'thinking' && !started){ pendingBubble.textContent = 'Razmišlja dublje…'; } }
+      (state) => { if(state === 'thinking' && !started){ pendingBubble.textContent = 'Thinking deeper…'; } }
     );
     quizHistory.push({ role: 'assistant', content: fullText });
     renderAnswer(pendingBubble, fullText);
   } catch(err){
-    renderAnswer(pendingBubble, 'Greška: ' + err.message);
+    renderAnswer(pendingBubble, 'Error: ' + err.message);
     console.error(err);
     quizStarted = false;
   } finally {
@@ -221,24 +221,24 @@ async function startQuiz(topic){
 
 async function askQuiz(answerText){
   addMessage('user', answerText);
-  const pendingBubble = addMessage('assistant', 'Razmišljam…', true);
+  const pendingBubble = addMessage('assistant', 'Thinking…', true);
   sendBtn.disabled = true;
   quizHistory.push({ role: 'user', content: answerText });
   let started = false;
   try{
     const fullText = await streamBackend(
-      'provera', quizHistory,
+      'quiz', quizHistory,
       (partial) => {
         if(!started){ pendingBubble.classList.remove('pending'); started = true; }
         pendingBubble.innerHTML = mdToHtml(partial);
         scrollChatToBottom();
       },
-      (state) => { if(state === 'thinking' && !started){ pendingBubble.textContent = 'Razmišlja dublje…'; } }
+      (state) => { if(state === 'thinking' && !started){ pendingBubble.textContent = 'Thinking deeper…'; } }
     );
     quizHistory.push({ role: 'assistant', content: fullText });
     renderAnswer(pendingBubble, fullText);
   } catch(err){
-    renderAnswer(pendingBubble, 'Greška: ' + err.message);
+    renderAnswer(pendingBubble, 'Error: ' + err.message);
     console.error(err);
     quizHistory.pop();
   } finally {
@@ -250,7 +250,7 @@ function trigger(){
   const q = input.value.trim();
   if(!q) return;
   input.value = '';
-  if(mode === 'provera'){
+  if(mode === 'quiz'){
     if(!quizStarted) return;
     askQuiz(q);
   } else {
@@ -264,29 +264,29 @@ function resetConversationState(){
   input.value = '';
   quizHistory = [];
   quizStarted = false;
-  if(mode === 'provera'){
+  if(mode === 'quiz'){
     input.disabled = true;
-    input.placeholder = 'Izaberi temu iznad da počneš proveru znanja…';
+    input.placeholder = 'Pick a topic above to start the knowledge check…';
   } else {
     input.disabled = false;
-    input.placeholder = 'Postavi pitanje iz gradiva…';
+    input.placeholder = 'Ask a question about the material…';
   }
 }
 
 function setMode(newMode){
   mode = newMode;
-  const pitajActive = mode === 'pitaj';
-  document.getElementById('tabPitaj').classList.toggle('active', pitajActive);
-  document.getElementById('tabProvera').classList.toggle('active', !pitajActive);
-  document.getElementById('scopeNotePitaj').style.display = pitajActive ? '' : 'none';
-  document.getElementById('scopeNoteProvera').style.display = pitajActive ? 'none' : '';
-  document.getElementById('chipsPitaj').style.display = pitajActive ? '' : 'none';
-  document.getElementById('chipsProvera').style.display = pitajActive ? 'none' : '';
+  const askActive = mode === 'ask';
+  document.getElementById('tabAsk').classList.toggle('active', askActive);
+  document.getElementById('tabQuiz').classList.toggle('active', !askActive);
+  document.getElementById('scopeNoteAsk').style.display = askActive ? '' : 'none';
+  document.getElementById('scopeNoteQuiz').style.display = askActive ? 'none' : '';
+  document.getElementById('chipsAsk').style.display = askActive ? '' : 'none';
+  document.getElementById('chipsQuiz').style.display = askActive ? 'none' : '';
   resetConversationState();
 }
 
 // ---------------------------------------------------------------------------
-// Inicijalizacija: povuci config sa servera i izgradi UI (naziv, teme, dugmad)
+// Initialization: fetch config from the server and build the UI (title, topics, buttons)
 // ---------------------------------------------------------------------------
 
 async function init(){
@@ -299,37 +299,37 @@ async function init(){
   document.getElementById('tutorInitial').textContent = cfg.tutorName.charAt(0) + '.';
   document.getElementById('tutorNameLower').textContent = cfg.tutorName.toLowerCase();
 
-  document.getElementById('scopeNotePitaj').innerHTML =
-    `<b>Prototip.</b> Odgovori na pitanja dolaze iz baze znanja koju je obezbedila profesorka/profesor ${cfg.tutorName}
-     (predmet: ${cfg.subjectNameCap}). Pitanja iz gradiva dobijaju odgovor sa <b>✓ IZVOR</b>.
-     Pitanja van gradiva i dalje dobijaju odgovor (iz opšteg znanja modela), ali sa napomenom
-     <b>◐ proveriti sa profesorkom</b>.`;
+  document.getElementById('scopeNoteAsk').innerHTML =
+    `<b>Prototype.</b> Answers come from the knowledge base provided by the teacher ${cfg.tutorName}
+     (subject: ${cfg.subjectNameCap}). Questions covered by the material get an answer marked <b>✓ SOURCE</b>.
+     Questions outside the material still get an answer (from the model's general knowledge), but with the note
+     <b>◐ verify with teacher</b>.`;
 
   document.getElementById('footerLine').innerHTML =
     `Model: <b>${cfg.model}</b> · Reasoning: <b>${cfg.reasoningLevel}</b>`;
 
-  const chipsPitaj = document.getElementById('chipsPitaj');
+  const chipsAsk = document.getElementById('chipsAsk');
   cfg.sampleQuestions.forEach(sq => {
     const btn = document.createElement('button');
     btn.className = 'chip';
     btn.textContent = sq.label;
     btn.addEventListener('click', () => ask(sq.question));
-    chipsPitaj.appendChild(btn);
+    chipsAsk.appendChild(btn);
   });
 
-  const chipsProvera = document.getElementById('chipsProvera');
+  const chipsQuiz = document.getElementById('chipsQuiz');
   cfg.topics.forEach(topic => {
     const btn = document.createElement('button');
     btn.className = 'chip chip-topic';
     btn.textContent = topic;
     btn.addEventListener('click', () => startQuiz(topic));
-    chipsProvera.appendChild(btn);
+    chipsQuiz.appendChild(btn);
   });
   const randomBtn = document.createElement('button');
   randomBtn.className = 'chip chip-topic';
-  randomBtn.textContent = 'nasumično';
-  randomBtn.addEventListener('click', () => startQuiz('nasumično, po tvom izboru iz celog gradiva'));
-  chipsProvera.appendChild(randomBtn);
+  randomBtn.textContent = 'random';
+  randomBtn.addEventListener('click', () => startQuiz('random, your choice from the whole material'));
+  chipsQuiz.appendChild(randomBtn);
 
   resetConversationState();
 }
@@ -339,7 +339,7 @@ input.addEventListener('keydown', (e) => {
   if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); trigger(); }
 });
 document.getElementById('clearBtn').addEventListener('click', resetConversationState);
-document.getElementById('tabPitaj').addEventListener('click', () => setMode('pitaj'));
-document.getElementById('tabProvera').addEventListener('click', () => setMode('provera'));
+document.getElementById('tabAsk').addEventListener('click', () => setMode('ask'));
+document.getElementById('tabQuiz').addEventListener('click', () => setMode('quiz'));
 
 init();

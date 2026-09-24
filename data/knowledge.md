@@ -1,97 +1,103 @@
 <!--
-  BAZA ZNANJA
-  ===========
-  Svaka tema počinje sa "## Naziv teme" i sadrži tekst ispod, sve do sledećeg "##".
-  Server ovo čita pri pokretanju i automatski:
-    - gradi materijal koji se šalje modelu (svaka tema postaje "[MATERIJAL N — naziv]")
-    - gradi listu tema za dugmad u režimu "Provera znanja"
-  Da dodaš, izmeniš ili obrišeš temu: samo uredi ovaj fajl i restartuj server (ili pozovi
-  GET /api/reload ako je uključen u server.js). Nema potrebe da diraš bilo koji .js fajl.
+  KNOWLEDGE BASE
+  ==============
+  Each topic starts with "## Topic name" and contains the text below it, up to the next "##".
+  The server reads this on startup and automatically:
+    - builds the material sent to the model (each topic becomes "[MATERIAL N — name]")
+    - builds the list of topics for the buttons in "Knowledge check" mode
+  To add, edit or delete a topic: just edit this file and restart the server (or call
+  POST /api/reload). There is no need to touch any .js file.
 -->
 
-## Prokariotska i eukariotska ćelija
+## Prokaryotic and eukaryotic cells
 
-U odnosu na tip ćelijske organizacije organizmi se dele na:
-1) Prokariota — bakterije, arhebakterije, modrozelene alge. Prokariotska DNK je cirkularna (kružna) i
-nalazi se u delu citoplazme koji se zove nukleoid.
-2) Eukariota — imaju jasno diferencirano jedro. DNK je linearna (linijska).
+Based on the type of cellular organization, organisms are divided into:
+1) Prokaryotes — bacteria, archaebacteria, blue-green algae. Prokaryotic DNA is circular and is located
+in a part of the cytoplasm called the nucleoid.
+2) Eukaryotes — have a clearly differentiated nucleus. Their DNA is linear.
 
-Prokariotske ćelije su mnogo sitnije od eukariotskih (0,1–10 μm naspram 10–100 μm) i pojavile su se pre
-oko 3,5 milijardi godina. Evolucija kod prokariota išla je u pravcu usložnjavanja metaboličkih procesa
-("majstori biohemije"), dok je kod eukariota išla u pravcu usložnjavanja građe — unutar ćelije su se
-javile različite organele sa specifičnim funkcijama.
+Prokaryotic cells are much smaller than eukaryotic cells (0.1–10 μm versus 10–100 μm) and appeared about
+3.5 billion years ago. Evolution in prokaryotes went in the direction of increasingly complex metabolic
+processes ("masters of biochemistry"), while in eukaryotes it went in the direction of increasingly
+complex structure — various organelles with specific functions appeared inside the cell.
 
-Građa prokariotske ćelije: ćelijski zid, ćelijska membrana (sa uvratima tj. mezozomima koji povećavaju
-unutrašnju površinu), citoplazma sa nukleoidom (DNK) i ribozomima; kod nekih i kapsula, plazmidi
-(vanhromozomska DNK van nukleoida), pili i bič (flagela — proteinske strukture za kretanje). Od organela
-imaju samo ribozome. Najčešći tip deobe je prosta deoba (binarna, fisiona, direktna — amitoza). Prema
-načinu ishrane: autotrofne (fotoautotrofne, hemoautotrofne) i heterotrofne (razlagači, paraziti,
-mutualisti). Prema građi ćelijskog zida: gram-pozitivne i gram-negativne bakterije (razlikuju se po
-debljini peptidoglikana i prisustvu spoljašnje membrane sa lipopolisaharidima kod gram-negativnih).
+Structure of the prokaryotic cell: cell wall, cell membrane (with infoldings, i.e. mesosomes, which
+increase the internal surface area), cytoplasm with the nucleoid (DNA) and ribosomes; some also have a
+capsule, plasmids (extrachromosomal DNA outside the nucleoid), pili and a flagellum (protein structures
+for movement). The only organelles they have are ribosomes. The most common type of division is simple
+division (binary fission, direct division — amitosis). By mode of nutrition: autotrophic
+(photoautotrophic, chemoautotrophic) and heterotrophic (decomposers, parasites, mutualists). By cell wall
+structure: gram-positive and gram-negative bacteria (they differ in the thickness of the peptidoglycan
+layer and in the presence of an outer membrane with lipopolysaccharides in gram-negative bacteria).
 
-## Organele: ER, Golgijev aparat, lizozomi, vakuola
+## Organelles: ER, Golgi apparatus, lysosomes, vacuole
 
-Ribozomi su jedine univerzalne organele — postoje i kod prokariota i kod eukariota. Uloga im je sinteza
-proteina, a to obavljaju u formi poliribozoma (polizoma). Mogu biti slobodni ili vezani. Kod prokariota
-translacija se odvija u citoplazmi; kod eukariota na svim mestima gde ima ribozoma — citoplazma,
-granulisani ER, spoljašnja jedrova membrana, mitohondrije, hloroplasti.
+Ribosomes are the only universal organelles — they exist in both prokaryotes and eukaryotes. Their role
+is protein synthesis, which they carry out in the form of polyribosomes (polysomes). They can be free or
+bound. In prokaryotes translation takes place in the cytoplasm; in eukaryotes, everywhere ribosomes are
+present — the cytoplasm, rough ER, outer nuclear membrane, mitochondria, chloroplasts.
 
-Endoplazmatični retikulum (ER) postoji u dva tipa: granulisani ER (ima ribozome na površini, ovde nastaju
-proteini kojima se mogu dodavati oligosaharidi) i agranulisani ER (nema ribozome, ovde nastaju lipidi).
-Makromolekuli iz ER putuju u obliku transportnih (prenosnih) vezikula ka Golgijevom aparatu, gde se vrši
-njihova konačna hemijska (žlezdana) modifikacija.
+The endoplasmic reticulum (ER) exists in two types: rough ER (has ribosomes on its surface; proteins are
+made here, to which oligosaccharides can be added) and smooth ER (has no ribosomes; lipids are made here).
+Macromolecules from the ER travel in the form of transport vesicles to the Golgi apparatus, where their
+final chemical (secretory) modification takes place.
 
-Golgijev aparat sastoji se od sakula koje zajedno čine diktiozom, i ima dva regiona: cis-region (okrenut
-ka ER, ovde ulaze prenosne vezikule) i trans-region (okrenut ka ćelijskoj membrani, odavde izlaze
-sekretorne vezikule).
+The Golgi apparatus consists of saccules that together form a dictyosome, and has two regions: the cis
+region (facing the ER, where transport vesicles enter) and the trans region (facing the cell membrane,
+where secretory vesicles exit).
 
-Lizozomi su "čistači" ćelije — razlažu neupotrebljive materije, i to iz same ćelije (autofagija) i one
-koje su došle iz spoljašnje sredine (heterofagija, npr. posle fagocitoze). Sadrže hidrolitičke enzime
-aktivne na pH=2, zajedničkog naziva kisele hidrolaze. Nastaju pupljenjem od Golgijevog aparata, a njihovi
-enzimi se sintetišu na granulisanom ER. Mogu biti primarni (neaktivni, nemaju supstrat za razlaganje) ili
-sekundarni (aktivni, nastaju spajanjem primarnog lizozoma sa supstratom koji treba razložiti — npr. sa
-fagosomom ili dotrajalom organelom). Put: 1. primarni lizozom, 2. fagocitoza (nastaje fagosom),
-3. spajanje primarnog lizozoma i fagosoma, 4. (alternativno) spajanje primarnog lizozoma sa dotrajalom
-organelom, 5. aktivni transport produkata hidrolize u citoplazmu, 6. egzocitoza (izbacivanje ostataka).
+Lysosomes are the "cleaners" of the cell — they break down unusable substances, both from the cell itself
+(autophagy) and those that came from the external environment (heterophagy, e.g. after phagocytosis).
+They contain hydrolytic enzymes active at pH=2, collectively called acid hydrolases. They form by budding
+from the Golgi apparatus, and their enzymes are synthesized on the rough ER. They can be primary
+(inactive, with no substrate to break down) or secondary (active, formed by the fusion of a primary
+lysosome with the substrate to be broken down — e.g. with a phagosome or a worn-out organelle). Pathway:
+1. primary lysosome, 2. phagocytosis (a phagosome forms), 3. fusion of the primary lysosome and the
+phagosome, 4. (alternatively) fusion of the primary lysosome with a worn-out organelle, 5. active
+transport of the hydrolysis products into the cytoplasm, 6. exocytosis (expulsion of the residues).
 
-Vakuola postoji kod biljaka, gljiva i nekih protista. Uloge: održavanje turgora (čvrstine biljke),
-sakupljanje štetnih materija, rezerva organskih molekula/jona/vode, sadrži pigmente koji daju boju,
-ima sličnu ulogu kao lizozom.
+The vacuole exists in plants, fungi and some protists. Roles: maintaining turgor (plant rigidity),
+collecting harmful substances, storing organic molecules/ions/water, containing pigments that give color,
+and a role similar to that of the lysosome.
 
-## Jedro, hromatin i hromozom
+## Nucleus, chromatin and chromosome
 
-Jedro (nucleus) je kontrolni centar ćelije jer se u njemu nalazi DNK. Ima dve membrane, između kojih je
-perinuklearni prostor (cisterna). Jedrove pore omogućavaju komunikaciju jedra i citoplazme: iz jedra u
-citoplazmu izlaze svi tipovi RNK (iRNK, rRNK, tRNK) i ribozomalne subjedinice, a iz citoplazme u jedro
-ulaze proteini.
+The nucleus is the control center of the cell because it contains the DNA. It has two membranes, with the
+perinuclear space (cisterna) between them. Nuclear pores allow communication between the nucleus and the
+cytoplasm: all types of RNA (mRNA, rRNA, tRNA) and ribosomal subunits exit the nucleus into the
+cytoplasm, and proteins enter the nucleus from the cytoplasm.
 
-U jedru se dešavaju: replikacija (sinteza DNK od DNK), transkripcija (sinteza svih tipova RNK od DNK) i
-maturacija/sazrevanje (od primarnih transkripata nastaju zrele iRNK, rRNK, tRNK). Translacija (sinteza
-proteina) se NIKADA ne dešava u jedru — uvek se odvija u citoplazmi, na svim mestima gde ima ribozoma.
+The following take place in the nucleus: replication (synthesis of DNA from DNA), transcription
+(synthesis of all types of RNA from DNA) and maturation (mature mRNA, rRNA and tRNA are produced from
+primary transcripts). Translation (protein synthesis) NEVER takes place in the nucleus — it always takes
+place in the cytoplasm, everywhere ribosomes are present.
 
-Unutrašnjost jedra čini nukleoplazma, čiji je glavni sastojak hromatin (DNK + histonski i nehistonski
-proteini). Hromatin može biti heterohromatin (kondenzovan, transkripciono neaktivan) ili euhromatin
-(razlabavljen, transkripciono aktivan — gen je "slobodan"/aktivan kad DNK nije čvrsto namotana oko
-histona). Hromatin vidimo tokom interfaze (vreme između dve ćelijske deobe), a hromozome tokom ćelijske
-deobe (mitoze ili mejoze) — hromatin je nepakovana forma, hromozom je upakovana forma istog materijala.
+The interior of the nucleus is the nucleoplasm, whose main component is chromatin (DNA + histone and
+non-histone proteins). Chromatin can be heterochromatin (condensed, transcriptionally inactive) or
+euchromatin (loosened, transcriptionally active — a gene is "free"/active when the DNA is not tightly
+wound around histones). Chromatin is seen during interphase (the time between two cell divisions), and
+chromosomes during cell division (mitosis or meiosis) — chromatin is the unpacked form, the chromosome is
+the packed form of the same material.
 
-Nivoi pakovanja: DNK dvolanac → namotava se oko histona i formira nukleozome → nukleozomi se pakuju u
-hromatinsko vlakno → dodatno se kondenzuje u hromozom (dve hromatide povezane u centromeri, sa kracima).
+Levels of packing: DNA double helix → winds around histones and forms nucleosomes → nucleosomes are
+packed into the chromatin fiber → further condensed into a chromosome (two chromatids joined at the
+centromere, with arms).
 
-Oblik (morfologija) hromozoma zavisi od položaja centromere (primarnog suženja): metacentrični (M),
-submetacentrični (SM), akrocentrični (A).
+The shape (morphology) of a chromosome depends on the position of the centromere (primary constriction):
+metacentric (M), submetacentric (SM), acrocentric (A).
 
-Jedarce (nukleolus) je organela bez membrane, nastaje na mestu akrocentričnih hromozoma (kod ljudi:
-D grupa — 13, 14, 15 i G grupa — 21, 22 par; ovi hromozomi se zovu NOR, nukleolarni organizator). U
-nukleolusu nastaje rRNK, koja se spaja sa ribozomalnim proteinima (nastalim u citoplazmi, ušlim kroz
-jedrove pore) i formira malu i veliku subjedinicu ribozoma — one zatim kroz jedrove pore izlaze u
-citoplazmu. Što je ćelija sintetski aktivnija (više euhromatina), nukleolus je veći ili ih ima više.
+The nucleolus is an organelle without a membrane; it forms at the site of the acrocentric chromosomes (in
+humans: group D — pairs 13, 14, 15 and group G — pairs 21, 22; these chromosomes are called NOR, the
+nucleolar organizer). rRNA is made in the nucleolus and combines with ribosomal proteins (made in the
+cytoplasm, having entered through the nuclear pores) to form the small and large ribosomal subunits —
+these then exit into the cytoplasm through the nuclear pores. The more synthetically active the cell
+(more euchromatin), the larger the nucleolus or the more nucleoli there are.
 
-## Ćelijski ciklus i replikacija DNK
+## Cell cycle and DNA replication
 
-Ćelijski ciklus se sastoji od interfaze i mitoze. Interfaza ima tri faze: G1, S (sinteza — replikacija
-DNK) i G2. Pre replikacije hromozom je jednohromatidni (1 molekul DNK, 2 lanca DNK). Posle replikacije
-u S fazi, hromozom postaje dvohromatidni (2 molekula DNK, 4 lanca DNK), pri čemu su dve hromatide
-povezane u centromeri.
+The cell cycle consists of interphase and mitosis. Interphase has three phases: G1, S (synthesis — DNA
+replication) and G2. Before replication a chromosome has one chromatid (1 DNA molecule, 2 DNA strands).
+After replication in the S phase, the chromosome has two chromatids (2 DNA molecules, 4 DNA strands),
+with the two chromatids joined at the centromere.
 
-Mitoza ima četiri faze, redosledom: profaza (P), metafaza (M), anafaza (A), telofaza (T).
+Mitosis has four phases, in order: prophase (P), metaphase (M), anaphase (A), telophase (T).

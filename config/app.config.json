@@ -1,9 +1,9 @@
 {
   "tutorName": "Nevenka",
-  "subjectName": "biologije",
-  "subjectNameCap": "Biologija",
-  "appTitle": "Biologija na ti",
-  "tagline": "AI asistent za pripremu prijemnog ispita",
+  "subjectName": "biology",
+  "subjectNameCap": "Biology",
+  "appTitle": "Biology Made Easy",
+  "tagline": "AI assistant for entrance exam preparation",
   "model": "claude-sonnet-5",
   "maxTokens": 1000,
   "reasoningLevel": "low"

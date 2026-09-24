@@ -1,7 +1,7 @@
 [
-  { "label": "prokariota vs eukariota", "question": "Koja je razlika između prokariotske i eukariotske ćelije?" },
-  { "label": "primarni vs sekundarni lizozom", "question": "Koja je razlika između primarnog i sekundarnog lizozoma?" },
-  { "label": "hromatin vs hromozom", "question": "Koja je razlika između hromatina i hromozoma?" },
-  { "label": "van gradiva → test", "question": "Objasni mi detaljno proces fotosinteze, sa svim fazama." },
-  { "label": "potpuno van teme → test", "question": "Koja je glavna izvozna kultura Brazila?" }
+  { "label": "prokaryotes vs eukaryotes", "question": "What is the difference between prokaryotic and eukaryotic cells?" },
+  { "label": "primary vs secondary lysosome", "question": "What is the difference between a primary and a secondary lysosome?" },
+  { "label": "chromatin vs chromosome", "question": "What is the difference between chromatin and a chromosome?" },
+  { "label": "outside curriculum → test", "question": "Explain the process of photosynthesis to me in detail, with all its phases." },
+  { "label": "completely off-topic → test", "question": "What is Brazil's main export crop?" }
 ]

@@ -2,15 +2,15 @@
 // -----------------------------------------------------------------------------
 // AI Tutor — backend
 //
-// Odgovornosti ovog fajla (i SAMO ovog fajla):
-//   1) Čuva Anthropic API ključ server-side (iz .env, nikad ne stiže do browsera)
-//   2) Učitava konfiguraciju brendiranja (config/app.config.json) i bazu znanja
-//      (data/knowledge.md) i od njih gradi sistemske promptove za model
-//   3) Izlaže dva mala API endpointa koje frontend zove
-//   4) Servira statičke fajlove iz /public
+// Responsibilities of this file (and ONLY this file):
+//   1) Keeps the Anthropic API key server-side (from .env, it never reaches the browser)
+//   2) Loads the branding configuration (config/app.config.json) and the knowledge base
+//      (data/knowledge.md) and builds the system prompts for the model from them
+//   3) Exposes a few small API endpoints that the frontend calls
+//   4) Serves static files from /public
 //
-// Za drugi predmet/tutora: NE DIRAJ ovaj fajl. Promeni config/app.config.json
-// i data/knowledge.md (i po želji data/sample-questions.json).
+// For a different subject/tutor: DO NOT TOUCH this file. Change config/app.config.json
+// and data/knowledge.md (and optionally data/sample-questions.json).
 // -----------------------------------------------------------------------------
 
 require('dotenv').config();
@@ -26,7 +26,7 @@ const KNOWLEDGE_PATH = path.join(__dirname, 'data', 'knowledge.md');
 const SAMPLE_Q_PATH = path.join(__dirname, 'data', 'sample-questions.json');
 
 // -----------------------------------------------------------------------------
-// Učitavanje i parsiranje baze znanja / konfiguracije
+// Loading and parsing the knowledge base / configuration
 // -----------------------------------------------------------------------------
 
 function loadConfig() {
@@ -38,11 +38,11 @@ function loadSampleQuestions() {
   return JSON.parse(fs.readFileSync(SAMPLE_Q_PATH, 'utf8'));
 }
 
-// Parsira knowledge.md: svaka "## Naslov" sekcija postaje jedna tema.
-// Vraća { topics: [{title, content}], materialText: "[MATERIJAL 1 — ...]\n...\n\n[MATERIJAL 2 — ...]..." }
+// Parses knowledge.md: each "## Title" section becomes one topic.
+// Returns { topics: [{title, content}], materialText: "[MATERIAL 1 — ...]\n...\n\n[MATERIAL 2 — ...]..." }
 function loadKnowledge() {
   const raw = fs.readFileSync(KNOWLEDGE_PATH, 'utf8');
-  // ukloni HTML komentar sa vrha fajla (uputstvo za uređivanje), ne ide modelu
+  // strip the HTML comment at the top of the file (editing instructions), it is not sent to the model
   const withoutComment = raw.replace(/<!--[\s\S]*?-->/, '').trim();
 
   const lines = withoutComment.split('\n');
@@ -63,7 +63,7 @@ function loadKnowledge() {
   topics.forEach(t => { t.content = t.content.trim(); });
 
   const materialText = topics
-    .map((t, i) => `[MATERIJAL ${i + 1} — ${t.title}]\n${t.content}`)
+    .map((t, i) => `[MATERIAL ${i + 1} — ${t.title}]\n${t.content}`)
     .join('\n\n');
 
   return { topics, materialText };
@@ -74,8 +74,8 @@ let knowledge = loadKnowledge();
 let sampleQuestions = loadSampleQuestions();
 
 // -----------------------------------------------------------------------------
-// Logging — jednostavan strukturiran logger (timestamp + nivo + poruka + meta),
-// bez eksternih zavisnosti. Koristi se za HTTP pristup, chat aktivnost i greške.
+// Logging — a simple structured logger (timestamp + level + message + meta),
+// with no external dependencies. Used for HTTP access, chat activity and errors.
 // -----------------------------------------------------------------------------
 
 function log(level, message, meta) {
@@ -86,63 +86,63 @@ function log(level, message, meta) {
 }
 
 // -----------------------------------------------------------------------------
-// Građenje sistemskih promptova (isti principi kao u prototipu: uzemljeno u
-// materijal, tri nivoa pouzdanosti za Q&A mod, Sokratski dijalog za quiz mod)
+// Building the system prompts (same principles as in the prototype: grounded in
+// the material, three confidence levels for Q&A mode, Socratic dialogue for quiz mode)
 // -----------------------------------------------------------------------------
 
 function buildQaSystemPrompt() {
-  return `Ti si AI asistent za pripremu prijemnog ispita iz ${config.subjectName}, napravljen za
-profesorku/profesora ${config.tutorName}, koji drži privatne časove. Odgovaraš isključivo na osnovu
-materijala koji je dat ispod, u tagu MATERIJAL.
+  return `You are an AI assistant for entrance exam preparation in ${config.subjectName}, built for
+the teacher ${config.tutorName}, who gives private lessons. You answer exclusively on the basis of the
+material given below, in the MATERIAL tag.
 
-Pravila:
-- Ako pitanje pokriva materijal ispod, odgovori jasno, korak po korak, kao profesor koji objašnjava učeniku.
-  Na kraju dodaj liniju u formatu: [IZVOR: naziv materijala].
-- Ako pitanje NIJE pokriveno materijalom ispod, ali je iz oblasti ${config.subjectName} (ili srodnih
-  oblasti koje se sa njom prepliću) i ti sa sigurnošću znaš tačan odgovor iz opšteg naučnog znanja —
-  SLOBODNO odgovori, jasno i tačno, korak po korak. Ali na kraju OBAVEZNO dodaj liniju u formatu:
-  [PROVERITI SA PROFESOROM] jer odgovor nije proveren protiv materijala i
-  metodologije profesora, iako je naučno tačan.
-- Ako pitanje uopšte nije iz oblasti ${config.subjectName}, ili ako nisi siguran u tačnost odgovora,
-  jasno reci da ne možeš pouzdano da odgovoriš i predloži da se pita profesor direktno.
-  Format: [NIJE U MATERIJALU]
-- Piši na srpskom jeziku, jasno i sažeto, prilagođeno srednjoškolcu koji se sprema za prijemni.
-- Ne izmišljaj podatke, brojeve ili činjenice u koje nisi siguran — u tom slučaju koristi
-  [NIJE U MATERIJALU] umesto nagađanja.
+Rules:
+- If the question is covered by the material below, answer clearly, step by step, like a teacher explaining to a student.
+  At the end, add a line in the format: [SOURCE: material name].
+- If the question is NOT covered by the material below, but is from the field of ${config.subjectName} (or
+  related fields that overlap with it) and you know the correct answer with certainty from general scientific
+  knowledge — FEEL FREE to answer, clearly and accurately, step by step. But at the end you MUST add a line in
+  the format: [VERIFY WITH TEACHER] because the answer has not been checked against the teacher's material and
+  methodology, even though it is scientifically correct.
+- If the question is not from the field of ${config.subjectName} at all, or if you are not sure the answer is
+  correct, say clearly that you cannot answer reliably and suggest asking the teacher directly.
+  Format: [NOT IN MATERIAL]
+- Write in English, clearly and concisely, suited to a high school student preparing for the entrance exam.
+- Do not make up data, numbers or facts you are not sure about — in that case use
+  [NOT IN MATERIAL] instead of guessing.
 
-MATERIJAL:
+MATERIAL:
 ${knowledge.materialText}`;
 }
 
 function buildQuizSystemPrompt() {
-  return `Ti si AI ispitivač za pripremu prijemnog ispita iz ${config.subjectName}, napravljen za
-profesorku/profesora ${config.tutorName}, koji drži privatne časove. Vodiš usmenu proveru znanja sa
-učenikom, isključivo na osnovu materijala datog ispod u tagu MATERIJAL.
+  return `You are an AI examiner for entrance exam preparation in ${config.subjectName}, built for
+the teacher ${config.tutorName}, who gives private lessons. You conduct an oral knowledge check with
+the student, based exclusively on the material given below in the MATERIAL tag.
 
-Način rada (ponašaj se kao profesor na usmenom ispitu):
-- Postavljaš JEDNO pitanje odjednom, iz teme koju ti učenik navede (ili nasumično iz celog materijala
-  ako kaže "nasumično"). Pitanje mora biti odgovorivo isključivo iz MATERIJALA ispod.
-- Kad učenik odgovori, proceni da li je odgovor kompletan i tačan u odnosu na MATERIJAL.
-  * Ako je odgovor NEPOTPUN ili delimično pogrešan: NEMOJ odmah dati tačan odgovor. Umesto toga postavi
-    kratko pod-pitanje ili nagoveštaj koji učenika vodi ka delu koji nedostaje. Budi ohrabrujući, ne strog.
-  * Ako je odgovor TAČAN i kompletan: potvrdi to kratko i pohvali, po potrebi dopuni sitnicu ako nešto
-    fali, i onda postavi SLEDEĆE pitanje iz iste teme (ili pitaj da li učenik želi da nastavi/promeni temu).
-  * Ako učenik nakon dva pokušaja i dalje ne dođe do odgovora, otkrij tačan i kompletan odgovor izvučen
-    iz MATERIJALA, jasno objašnjen, pa nastavi dalje.
-- Uvek ostani u okviru MATERIJALA ispod — ne izmišljaj pitanja niti odgovore koji nisu tamo pokriveni.
-- Piši na srpskom jeziku, kratko i jasno, tonom profesora koji ispituje ali podržava učenika.
-- Ne koristi tagove [IZVOR], [PROVERITI SA ...] ni [NIJE U MATERIJALU] u ovom režimu.
+How to work (behave like a teacher at an oral exam):
+- Ask ONE question at a time, from the topic the student names (or at random from the whole material
+  if they say "random"). The question must be answerable exclusively from the MATERIAL below.
+- When the student answers, judge whether the answer is complete and correct with respect to the MATERIAL.
+  * If the answer is INCOMPLETE or partly wrong: DO NOT give the correct answer right away. Instead, ask a
+    short follow-up question or give a hint that leads the student toward the missing part. Be encouraging, not strict.
+  * If the answer is CORRECT and complete: confirm it briefly and praise the student, fill in a small detail if
+    something is missing, and then ask the NEXT question from the same topic (or ask whether the student wants to continue/change the topic).
+  * If after two attempts the student still does not reach the answer, reveal the correct and complete answer
+    drawn from the MATERIAL, clearly explained, and then move on.
+- Always stay within the MATERIAL below — do not invent questions or answers that are not covered there.
+- Write in English, briefly and clearly, in the tone of a teacher who examines but supports the student.
+- Do not use the tags [SOURCE], [VERIFY WITH ...] or [NOT IN MATERIAL] in this mode.
 
-MATERIJAL:
+MATERIAL:
 ${knowledge.materialText}`;
 }
 
 // -----------------------------------------------------------------------------
-// Reasoning (adaptive thinking) — konfigurabilno preko config.reasoningLevel:
+// Reasoning (adaptive thinking) — configurable via config.reasoningLevel:
 // "none" | "low" | "medium" | "high" | "xhigh" | "max"
-// Kad je != "none", šaljemo thinking:{type:"adaptive"} + output_config:{effort}.
-// max_tokens mora imati dovoljno prostora i za razmišljanje i za odgovor, pa ga
-// uvećavamo u zavisnosti od nivoa (heuristika, ne stroga garancija).
+// When != "none", we send thinking:{type:"adaptive"} + output_config:{effort}.
+// max_tokens must leave enough room for both thinking and the answer, so we
+// increase it depending on the level (a heuristic, not a strict guarantee).
 // -----------------------------------------------------------------------------
 
 const REASONING_EXTRA_TOKENS = {
@@ -181,7 +181,7 @@ function buildRequestBody(systemPrompt, messages) {
 const app = express();
 app.use(express.json());
 
-// Loguje svaki HTTP zahtev: metod, putanju, status kod i trajanje.
+// Logs every HTTP request: method, path, status code and duration.
 app.use((req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
@@ -192,8 +192,8 @@ app.use((req, res, next) => {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Frontend čita brending, teme za quiz i demo pitanja odavde — ništa nije
-// hardkodovano u HTML/JS, sve dolazi iz config/ i data/.
+// The frontend reads branding, quiz topics and demo questions from here — nothing is
+// hardcoded in the HTML/JS, everything comes from config/ and data/.
 app.get('/api/config', (req, res) => {
   res.json({
     appTitle: config.appTitle,
@@ -207,8 +207,8 @@ app.get('/api/config', (req, res) => {
   });
 });
 
-// Ručni reload baze znanja/konfiguracije bez restarta servera — korisno kad
-// profesor uređuje knowledge.md i želi odmah da vidi promenu.
+// Manual reload of the knowledge base/configuration without restarting the server — useful
+// when the teacher edits knowledge.md and wants to see the change right away.
 app.post('/api/reload', (req, res) => {
   try {
     config = loadConfig();
@@ -217,31 +217,31 @@ app.post('/api/reload', (req, res) => {
     res.json({ ok: true, topics: knowledge.topics.length });
     log('info', `reload ok topics=${knowledge.topics.length}`);
   } catch (err) {
-    log('error', 'Greška pri reload-u', { error: err.message });
-    res.status(500).json({ error: 'Greška pri učitavanju: ' + err.message });
+    log('error', 'Reload failed', { error: err.message });
+    res.status(500).json({ error: 'Failed to load: ' + err.message });
   }
 });
 
-// Jedini endpoint koji zove Anthropic API. mode='pitaj' -> QA prompt (stateless,
-// jedno pitanje). mode='provera' -> quiz prompt, klijent šalje CELU istoriju
-// razgovora u messages (server ne drži sesiju - jednostavnije i dovoljno za MVP).
+// The only endpoint that calls the Anthropic API. mode='ask' -> QA prompt (stateless,
+// a single question). mode='quiz' -> quiz prompt, the client sends the ENTIRE conversation
+// history in messages (the server keeps no session - simpler and sufficient for an MVP).
 //
-// Streamuje odgovor nazad klijentu kao Server-Sent Events sa sopstvenim, prostim
-// protokolom (ne prosleđuje sirov Anthropic SSE 1:1):
+// Streams the answer back to the client as Server-Sent Events using its own simple
+// protocol (it does not forward the raw Anthropic SSE 1:1):
 //   event: status   data: {"state":"thinking"|"answering"}
-//   event: delta    data: {"text":"..."}       (samo tekst odgovora, thinking se ne šalje klijentu)
+//   event: delta    data: {"text":"..."}       (answer text only, thinking is not sent to the client)
 //   event: done     data: {}
 //   event: error    data: {"message":"..."}
 app.post('/api/chat', async (req, res) => {
   if (!API_KEY) {
     return res.status(500).json({
-      error: 'Server nema podešen ANTHROPIC_API_KEY. Vidi .env.example.'
+      error: 'The server has no ANTHROPIC_API_KEY configured. See .env.example.'
     });
   }
 
   const { mode, messages } = req.body || {};
   if (!Array.isArray(messages) || messages.length === 0) {
-    return res.status(400).json({ error: 'Nedostaje messages niz.' });
+    return res.status(400).json({ error: 'Missing messages array.' });
   }
 
   const chatStart = Date.now();
@@ -249,9 +249,9 @@ app.post('/api/chat', async (req, res) => {
   const preview = typeof lastMessage?.content === 'string'
     ? lastMessage.content.slice(0, 120).replace(/\s+/g, ' ')
     : '';
-  log('info', `chat start mode=${mode || 'pitaj'} messages=${messages.length} preview="${preview}"`);
+  log('info', `chat start mode=${mode || 'ask'} messages=${messages.length} preview="${preview}"`);
 
-  const systemPrompt = mode === 'provera' ? buildQuizSystemPrompt() : buildQaSystemPrompt();
+  const systemPrompt = mode === 'quiz' ? buildQuizSystemPrompt() : buildQaSystemPrompt();
   const requestBody = buildRequestBody(systemPrompt, messages);
 
   let upstream;
@@ -266,16 +266,16 @@ app.post('/api/chat', async (req, res) => {
       body: JSON.stringify(requestBody)
     });
   } catch (err) {
-    log('error', 'Greška u komunikaciji sa modelom', { mode, error: err.message });
-    return res.status(500).json({ error: 'Greška u komunikaciji sa modelom: ' + err.message });
+    log('error', 'Error communicating with the model', { mode, error: err.message });
+    return res.status(500).json({ error: 'Error communicating with the model: ' + err.message });
   }
 
-  // Ako je sam zahtev odbijen (loš ključ, loš model, itd.), Anthropic vraća
-  // običan (ne-streamovan) JSON — prosledi ga kao normalnu grešku, ne SSE.
+  // If the request itself is rejected (bad key, bad model, etc.), Anthropic returns
+  // plain (non-streamed) JSON — forward it as a normal error, not SSE.
   if (!upstream.ok) {
     const errData = await upstream.json().catch(() => ({}));
-    log('error', 'Anthropic API greška', { mode, status: upstream.status, error: errData });
-    return res.status(upstream.status).json({ error: errData.error?.message || 'Anthropic API greška' });
+    log('error', 'Anthropic API error', { mode, status: upstream.status, error: errData });
+    return res.status(upstream.status).json({ error: errData.error?.message || 'Anthropic API error' });
   }
 
   res.setHeader('Content-Type', 'text/event-stream');
@@ -298,7 +298,7 @@ app.post('/api/chat', async (req, res) => {
       buffer += decoder.decode(value, { stream: true });
 
       const chunks = buffer.split('\n\n');
-      buffer = chunks.pop(); // poslednji, možda nekompletan deo, čeka sledeći read
+      buffer = chunks.pop(); // the last, possibly incomplete chunk waits for the next read
 
       for (const chunk of chunks) {
         const dataLine = chunk.split('\n').find(l => l.startsWith('data: '));
@@ -311,27 +311,27 @@ app.post('/api/chat', async (req, res) => {
           if (evt.content_block?.type === 'text') sendEvent('status', { state: 'answering' });
         } else if (evt.type === 'content_block_delta') {
           if (evt.delta?.type === 'text_delta') sendEvent('delta', { text: evt.delta.text });
-          // thinking_delta se namerno ne prosleđuje klijentu (učenik ne treba da vidi sirovo rezonovanje)
+          // thinking_delta is intentionally not forwarded to the client (the student should not see raw reasoning)
         } else if (evt.type === 'error') {
-          sendEvent('error', { message: evt.error?.message || 'Anthropic streaming greška' });
+          sendEvent('error', { message: evt.error?.message || 'Anthropic streaming error' });
         }
       }
     }
     sendEvent('done', {});
-    log('info', `chat done mode=${mode || 'pitaj'} ${Date.now() - chatStart}ms`);
+    log('info', `chat done mode=${mode || 'ask'} ${Date.now() - chatStart}ms`);
   } catch (err) {
-    log('error', 'Greška u streamu', { mode, error: err.message });
-    sendEvent('error', { message: 'Greška u streamu: ' + err.message });
+    log('error', 'Stream error', { mode, error: err.message });
+    sendEvent('error', { message: 'Stream error: ' + err.message });
   } finally {
     res.end();
   }
 });
 
 app.listen(PORT, () => {
-  log('info', `${config.appTitle} radi na http://localhost:${PORT}`);
-  log('info', `Učitano tema iz baze znanja: ${knowledge.topics.length}`);
+  log('info', `${config.appTitle} running at http://localhost:${PORT}`);
+  log('info', `Topics loaded from knowledge base: ${knowledge.topics.length}`);
   log('info', `Model: ${config.model} · Reasoning level: ${config.reasoningLevel || 'none'}`);
   if (!API_KEY) {
-    log('warn', 'ANTHROPIC_API_KEY nije podešen (vidi .env.example) — /api/chat neće raditi.');
+    log('warn', 'ANTHROPIC_API_KEY is not set (see .env.example) — /api/chat will not work.');
   }
 });

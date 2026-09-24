@@ -1,7 +1,7 @@
 {
   "name": "ai-tutor",
   "version": "1.0.0",
-  "description": "AI tutor uzemljen u sopstvenu bazu znanja - konfigurabilan za bilo kog tutora/predmet",
+  "description": "AI tutor grounded in its own knowledge base - configurable for any tutor/subject",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
