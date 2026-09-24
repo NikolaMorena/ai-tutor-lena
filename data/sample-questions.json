@@ -1,7 +1,7 @@
 [
-  { "label": "prokaryotes vs eukaryotes", "question": "What is the difference between prokaryotic and eukaryotic cells?" },
-  { "label": "primary vs secondary lysosome", "question": "What is the difference between a primary and a secondary lysosome?" },
-  { "label": "chromatin vs chromosome", "question": "What is the difference between chromatin and a chromosome?" },
-  { "label": "outside curriculum → test", "question": "Explain the process of photosynthesis to me in detail, with all its phases." },
+  { "label": "homogeneous coordinates", "question": "Why do we use homogeneous coordinates for transformations?" },
+  { "label": "Bresenham algorithm", "question": "How does the Bresenham line algorithm work, and why is it better than DDA?" },
+  { "label": "Gouraud vs Phong shading", "question": "What is the difference between Gouraud shading and Phong shading?" },
+  { "label": "outside curriculum → test", "question": "How does hardware-accelerated ray tracing work on modern GPUs with RT cores?" },
   { "label": "completely off-topic → test", "question": "What is Brazil's main export crop?" }
 ]

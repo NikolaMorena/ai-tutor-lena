@@ -300,7 +300,7 @@ async function init(){
   document.getElementById('tutorNameLower').textContent = cfg.tutorName.toLowerCase();
 
   document.getElementById('scopeNoteAsk').innerHTML =
-    `<b>Prototype.</b> Answers come from the knowledge base provided by the teacher ${cfg.tutorName}
+    `<b>Prototype.</b> Answers come from the knowledge base provided by the tutor ${cfg.tutorName}
      (subject: ${cfg.subjectNameCap}). Questions covered by the material get an answer marked <b>✓ SOURCE</b>.
      Questions outside the material still get an answer (from the model's general knowledge), but with the note
      <b>◐ verify with teacher</b>.`;

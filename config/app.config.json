@@ -1,9 +1,10 @@
 {
-  "tutorName": "Nevenka",
-  "subjectName": "biology",
-  "subjectNameCap": "Biology",
-  "appTitle": "Biology Made Easy",
-  "tagline": "AI assistant for entrance exam preparation",
+  "tutorName": "Lena",
+  "subjectName": "Computer Graphics",
+  "subjectNameCap": "Computer Graphics",
+  "appTitle": "Computer Graphics Tutor",
+  "tagline": "AI assistant for Introduction to Visual Computing (CG part)",
+  "audience": "a university student preparing for the Introduction to Visual Computing exam",
   "model": "claude-sonnet-5",
   "maxTokens": 1000,
   "reasoningLevel": "low"

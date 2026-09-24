@@ -91,8 +91,8 @@ function log(level, message, meta) {
 // -----------------------------------------------------------------------------
 
 function buildQaSystemPrompt() {
-  return `You are an AI assistant for entrance exam preparation in ${config.subjectName}, built for
-the teacher ${config.tutorName}, who gives private lessons. You answer exclusively on the basis of the
+  return `You are an AI assistant for exam preparation in ${config.subjectName}, built for
+the tutor ${config.tutorName}. You answer exclusively on the basis of the
 material given below, in the MATERIAL tag.
 
 Rules:
@@ -106,7 +106,7 @@ Rules:
 - If the question is not from the field of ${config.subjectName} at all, or if you are not sure the answer is
   correct, say clearly that you cannot answer reliably and suggest asking the teacher directly.
   Format: [NOT IN MATERIAL]
-- Write in English, clearly and concisely, suited to a high school student preparing for the entrance exam.
+- Write in English, clearly and concisely, suited to ${config.audience || 'a student preparing for the exam'}.
 - Do not make up data, numbers or facts you are not sure about — in that case use
   [NOT IN MATERIAL] instead of guessing.
 
@@ -115,8 +115,8 @@ ${knowledge.materialText}`;
 }
 
 function buildQuizSystemPrompt() {
-  return `You are an AI examiner for entrance exam preparation in ${config.subjectName}, built for
-the teacher ${config.tutorName}, who gives private lessons. You conduct an oral knowledge check with
+  return `You are an AI examiner for exam preparation in ${config.subjectName}, built for
+the tutor ${config.tutorName}. You conduct an oral knowledge check with
 the student, based exclusively on the material given below in the MATERIAL tag.
 
 How to work (behave like a teacher at an oral exam):
@@ -161,7 +161,9 @@ function buildRequestBody(systemPrompt, messages) {
   const body = {
     model: config.model,
     max_tokens: (config.maxTokens || 1000) + extra,
-    system: systemPrompt,
+    // The system prompt carries the whole knowledge base, so it is cached: repeat
+    // requests within a few minutes reuse it instead of paying for it again.
+    system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
     messages,
     stream: true
   };

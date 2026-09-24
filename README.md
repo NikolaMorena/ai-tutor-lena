@@ -1,7 +1,8 @@
 # AI Tutor
 
 A small web application: an AI tutor grounded in its own knowledge base, with a Q&A mode and a
-"Knowledge check" (oral exam) mode. The API key is kept on the server, never in the browser.
+"Knowledge check" (oral exam) mode. The current knowledge base is the Computer Graphics part of the
+TU Wien lecture notes for *Introduction to Visual Computing* (VU 186.822, SS 2025). The API key is kept on the server, never in the browser.
 
 ## Running locally
 
@@ -19,6 +20,7 @@ Open http://localhost:3000
 ```
 config/app.config.json    <- branding + model + reasoning level
 data/knowledge.md         <- KNOWLEDGE BASE - all the material the AI is grounded in
+data/EVC_Skriptum_CG_EN_v3.pdf <- original source of the knowledge base (not read by the server)
 data/sample-questions.json<- demo questions for the buttons in "Ask" mode
 server.js                 <- backend (Express) - the only file that knows the API key
 public/                   <- frontend (HTML/CSS/JS), no need to touch it to change the subject
@@ -56,7 +58,8 @@ thinking, before the text starts arriving (the raw thinking is never shown to th
 ## How to change the subject/tutor (without writing code)
 
 1. Open `config/app.config.json` and change `tutorName`, `subjectName`, `subjectNameCap`,
-   `appTitle`, `tagline`.
+   `appTitle`, `tagline`, and `audience` (who the answers are written for, e.g. "a university student
+   preparing for the exam").
 2. Replace the contents of `data/knowledge.md` with the new material. Format: each topic starts with
    `## Topic name`, and its content goes below it until the next `##`. The number of topics is unlimited -
    the "Knowledge check" buttons and the topic list in the system prompt are built automatically from this file.
@@ -80,3 +83,5 @@ in `.env` locally), and is never put in the code or the frontend.
   persistently) - if they refresh the page, they lose their progress. For a real version, this should be
   stored per student (in a database), so the teacher can also see where students most often make mistakes.
 - One model for everything (Claude Sonnet) - changeable in `config/app.config.json` -> `model`.
+- The whole knowledge base (~40k tokens) is sent with every request. Prompt caching keeps repeat
+  requests cheap, but for a much larger body of material a retrieval step would be needed.
